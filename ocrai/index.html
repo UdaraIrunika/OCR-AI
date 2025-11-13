@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>OCR.ai — Image to Text</title>
+		<!-- Tailwind via CDN for quick styling -->
+		<script src="https://cdn.tailwindcss.com"></script>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body class="bg-slate-50 min-h-screen flex items-center justify-center p-6">
+		<main class="w-full max-w-3xl">
+			<div class="bg-white shadow-md rounded-xl p-6">
+				<header class="mb-4">
+					<h1 class="text-2xl font-semibold text-sky-600">OCR.ai</h1>
+					<p class="text-sm text-gray-500">Upload an image and extract text instantly (client-side).</p>
+				</header>
+
+				<section id="uploader" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div>
+						<div id="dropZone" class="border-2 border-dashed border-slate-200 rounded-lg p-4 text-center transition-all duration-200 hover:border-slate-300">
+							<div class="flex items-center justify-center flex-col gap-3">
+								<svg class="w-14 h-14 text-sky-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 16V8a4 4 0 018 0v8m-9 4h10a2 2 0 002-2V7a2 2 0 00-2-2h-3" />
+								</svg>
+								<p class="text-gray-600">Drag & drop an image here, or</p>
+								<label class="inline-block">
+									<input id="fileInput" type="file" accept="image/*,application/pdf" class="hidden" />
+									<span class="px-4 py-2 bg-sky-600 text-white rounded-md cursor-pointer">Choose file</span>
+								</label>
+								<p id="dropHelp" class="text-xs text-gray-400">Supported: JPG, PNG. PDF (multi-page) requires backend.</p>
+							</div>
+						</div>
+
+						<div class="mt-4 flex gap-2 items-center">
+							<button id="processBtn" class="flex-1 px-4 py-2 bg-sky-600 text-white rounded-md disabled:opacity-60" disabled>Extract Text</button>
+							<button id="clearBtn" class="px-3 py-2 bg-gray-100 rounded-md">Clear</button>
+						</div>
+
+						<div class="mt-3">
+							<label class="block text-sm text-gray-600">OCR Language(s)</label>
+							<select id="languageSelect" multiple class="mt-2 w-full border border-slate-200 rounded-md p-2 text-sm">
+								<option value="eng" selected>English (eng)</option>
+								<option value="spa">Spanish (spa)</option>
+								<option value="fra">French (fra)</option>
+								<option value="deu">German (deu)</option>
+								<option value="ita">Italian (ita)</option>
+								<option value="por">Portuguese (por)</option>
+								<option value="rus">Russian (rus)</option>
+								<option value="chi_sim">Chinese Simplified (chi_sim)</option>
+								<option value="chi_tra">Chinese Traditional (chi_tra)</option>
+								<option value="jpn">Japanese (jpn)</option>
+								<option value="kor">Korean (kor)</option>
+								<option value="ara">Arabic (ara)</option>
+								<option value="hin">Hindi (hin)</option>
+								<option value="heb">Hebrew (heb)</option>
+								<option value="tur">Turkish (tur)</option>
+								<option value="vie">Vietnamese (vie)</option>
+								<option value="tha">Thai (tha)</option>
+								<option value="nld">Dutch (nld)</option>
+								<option value="sin">Sinhala (sin)</option>
+								<option value="swe">Swedish (swe)</option>
+								<option value="pol">Polish (pol)</option>
+								<option value="ukr">Ukrainian (ukr)</option>
+								<option value="ell">Greek (ell)</option>
+								<option value="dan">Danish (dan)</option>
+								<option value="fin">Finnish (fin)</option>
+								<option value="hun">Hungarian (hun)</option>
+							</select>
+							<p id="langHelp" class="text-xs text-gray-400 mt-1">Tip: hold Ctrl/Cmd to select multiple. Loading many languages increases download size.</p>
+						</div>
+
+						<div class="mt-4 text-sm text-gray-500">
+							<p><strong>Progress:</strong> <span id="progressText">idle</span></p>
+						</div>
+					</div>
+
+					<div>
+						<div class="bg-slate-50 border border-slate-100 rounded-lg p-3 min-h-[220px] flex flex-col items-center justify-center">
+							<img id="preview" alt="preview" class="max-h-52 object-contain hidden rounded-md" />
+							<div id="placeholderPreview" class="text-center text-gray-400">
+								<p class="text-sm">No image selected</p>
+							</div>
+						</div>
+
+						<div id="spinnerArea" class="mt-4 hidden">
+							<div class="flex items-center gap-3">
+								<div class="loader ease-linear rounded-full border-4 border-t-4 border-sky-300 h-8 w-8"></div>
+								<div class="text-sm text-gray-600">Processing OCR...</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section class="mt-6">
+					<label class="block text-sm font-medium text-gray-700">Extracted Text</label>
+					<textarea id="result" class="mt-2 w-full h-48 p-3 rounded-md border border-slate-200 resize-none font-mono text-sm" placeholder="OCR output will appear here..."></textarea>
+
+					<div class="mt-3 flex gap-2">
+						<button id="copyBtn" class="px-4 py-2 bg-amber-500 text-white rounded-md">Copy</button>
+						<button id="downloadBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-md">Download .txt</button>
+						<button id="saveLocalBtn" class="px-4 py-2 bg-sky-100 text-sky-700 rounded-md">Save Locally</button>
+						<div class="ml-auto text-xs text-gray-400 self-center">Language: English (default)</div>
+					</div>
+				</section>
+			</div>
+			<footer class="mt-4 text-center text-xs text-gray-400">Built with Tesseract.js • Client-side OCR</footer>
+		</main>
+
+		<!-- Use jsDelivr CDN for a stable Tesseract build -->
+		<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+		<script src="script.js"></script>
+	</body>
+</html>
+

@@ -1,0 +1,22 @@
+/* Small custom styles */
+.loader{
+  border-top-color: transparent;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin{
+  to{transform: rotate(360deg);}
+}
+
+/* Simple fade-in for results */
+.fade-in{
+  animation: fadeIn 220ms ease-out;
+}
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Responsive tweaks */
+@media (max-width:640px){
+  #uploader{grid-template-columns: 1fr}
+}
