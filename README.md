@@ -5,6 +5,14 @@ A powerful, privacy-focused client-side Optical Character Recognition (OCR) web 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tesseract.js](https://img.shields.io/badge/Tesseract.js-v4.1.1-green.svg)](https://tesseract.projectnaptha.com/)
 
+## 📱 ScreenShots
+<img width="1904" height="956" alt="Screenshot 2025-11-14 024648" src="https://github.com/user-attachments/assets/4014b26f-8c1d-4a72-854a-2f8ce8421dc6" />
+
+<img width="1905" height="957" alt="Screenshot 2025-11-14 024720" src="https://github.com/user-attachments/assets/ebf59930-7bca-470d-baa4-e12ff9a8ffad" />
+
+https://github.com/user-attachments/assets/9b15a604-d8c0-47dd-af71-a5f92fe20af0
+
+
 ## ✨ Features
 
 - **🔒 Privacy-First**: All OCR processing happens locally in your browser
