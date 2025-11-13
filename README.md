@@ -8,11 +8,12 @@ A powerful, privacy-focused client-side Optical Character Recognition (OCR) web 
 ## ✨ Features
 
 - **🔒 Privacy-First**: All OCR processing happens locally in your browser
-- **🌍 Multi-Language Support**: 100+ languages including English, Spanish, Chinese, Arabic, Sinhala, and more
+- **🌍 Multi-Language Support**: 25+ languages including English, Spanish, Chinese, Arabic, Sinhala, and more
 - **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
 - **⚡ Real-Time Progress**: Visual feedback during text extraction
-- **💾 Export Options**: Copy to clipboard or download as `.txt` file
+- **💾 Multiple Export Options**: Copy to clipboard, download as `.txt`, or save to browser storage
 - **🎨 Modern UI**: Clean, intuitive interface built with Tailwind CSS
+- **🖼️ Drag & Drop**: Easy image upload via drag-and-drop or file selection
 
 ## 🚀 Quick Start
 
@@ -20,20 +21,25 @@ A powerful, privacy-focused client-side Optical Character Recognition (OCR) web 
 
 1. **Clone or download** this repository
 
-2. **Start a local server** (required for proper Tesseract.js functionality):
+2. **Start a local HTTP server** (required for proper Tesseract.js functionality):
 
    **Python:**
    ```bash
    # Python 3
    python -m http.server 8000
    
-   # or Python 2
+   # Python 2
    python -m SimpleHTTPServer 8000
+   
+   # Windows (Python 3)
+   py -3 -m http.server 8000
    ```
 
    **Node.js:**
    ```bash
    npx serve
+   # or with http-server
+   npx http-server -p 8000
    ```
 
    **PHP:**
@@ -44,253 +50,481 @@ A powerful, privacy-focused client-side Optical Character Recognition (OCR) web 
 3. **Open in browser**: Navigate to `http://localhost:8000`
 
 4. **Start extracting text**:
-   - Drag & drop an image, or click "Choose file"
-   - Select OCR language(s) from the dropdown
-   - Click "Extract Text"
-   - Copy or download the results
+   - Drag & drop an image onto the drop zone, or click "Choose file"
+   - Select OCR language(s) from the dropdown (default: English)
+   - Click "Extract Text" and wait for processing
+   - Copy, download, or save the extracted text
 
-> **⚠️ Note**: Opening `index.html` directly (file://) may work but is not recommended due to CORS restrictions when fetching language data.
+> **⚠️ Important**: Opening `index.html` directly via `file://` protocol may work but is **not recommended**. Tesseract.js requires HTTP/HTTPS to properly download language training data from the CDN.
 
 ## 📁 Project Structure
 
 ```
 OCR.ai/
-├── index.html          # Main application UI
-├── style.css           # Custom styles and animations
-├── script.js           # Core application logic
-├── assets/             # Sample images and resources
-└── README.md           # Documentation (you are here)
+├── index.html          # Main application UI and structure
+├── style.css           # Custom styles (spinner, animations, responsive)
+├── script.js           # Core application logic and Tesseract.js integration
+├── assets/             # Sample images (optional)
+└── README.md           # Documentation
 ```
+
+### File Overview
+
+- **`index.html`**: Contains the entire UI built with Tailwind CSS CDN, including:
+  - File upload area with drag & drop support
+  - Image preview section
+  - Multi-language selector
+  - Progress indicator
+  - Results textarea with action buttons
+  - References to Tesseract.js v4.1.1 via jsDelivr CDN
+
+- **`style.css`**: Minimal custom CSS for:
+  - Animated loading spinner
+  - Fade-in animation for results
+  - Responsive grid adjustments for mobile
+
+- **`script.js`**: Complete application logic including:
+  - File handling (drag & drop, file input)
+  - Image preview management
+  - Tesseract.js worker initialization with fallback support
+  - Language selection and validation
+  - Progress tracking and error handling
+  - Export functionality (copy, download, localStorage)
 
 ## 🌐 Language Support
 
+### Available Languages
+
+The application supports 25+ languages out of the box:
+
+| Language | Code | Language | Code |
+|----------|------|----------|------|
+| English | `eng` | Spanish | `spa` |
+| French | `fra` | German | `deu` |
+| Italian | `ita` | Portuguese | `por` |
+| Russian | `rus` | Chinese (Simplified) | `chi_sim` |
+| Chinese (Traditional) | `chi_tra` | Japanese | `jpn` |
+| Korean | `kor` | Arabic | `ara` |
+| Hindi | `hin` | Hebrew | `heb` |
+| Turkish | `tur` | Vietnamese | `vie` |
+| Thai | `tha` | Dutch | `nld` |
+| **Sinhala** | `sin` | Swedish | `swe` |
+| Polish | `pol` | Ukrainian | `ukr` |
+| Greek | `ell` | Danish | `dan` |
+| Finnish | `fin` | Hungarian | `hun` |
+
 ### Selecting Languages
 
-The app supports 100+ languages through Tesseract's trained data models:
+**Single Language:**
+- Click once to select a language from the dropdown
 
-- **Single language**: Select one language from the dropdown
-- **Multiple languages**: Hold `Ctrl` (Windows/Linux) or `Cmd` (Mac) to select multiple languages
-- **Combined recognition**: Multiple languages are automatically combined (e.g., `eng+spa` for English and Spanish)
+**Multiple Languages:**
+- Hold `Ctrl` (Windows/Linux) or `Cmd` (Mac) while clicking to select multiple languages
+- Multiple languages are combined with `+` (e.g., `eng+spa` for English and Spanish documents)
 
-### Sinhala Support
-
-This project explicitly includes **Sinhala (`sin`)** as a supported language. When selected, `sin.traineddata` will be automatically downloaded from the configured language data source.
+**Multi-Language Recognition:**
+- Useful for documents containing mixed languages
+- Example: Select both `eng` and `fra` to recognize English and French text in the same image
 
 ### Performance Considerations
 
-⚠️ **Important**: Language data files can be large (2-15 MB each). Selecting multiple languages will:
-- Increase initial download time
-- Consume more bandwidth
-- Use more memory during processing
+⚠️ **Important**: Language training data files are **2-15 MB each**. When selecting multiple languages:
 
-For best performance, select only the languages you need.
+- Initial download time will increase proportionally
+- Memory usage during processing will be higher
+- The app will warn you when selecting more than 3 languages
+- **Recommendation**: Select only the languages present in your document for optimal performance
+
+### Sinhala Language Support
+
+This project explicitly includes **Sinhala (`sin`)** support:
+- `sin.traineddata` is automatically downloaded from the CDN when selected
+- File size: ~3.5 MB
+- For offline usage, download the traineddata file and self-host (see Advanced Configuration)
 
 ## 🔧 Advanced Configuration
 
 ### Self-Hosting Language Data
 
-For production deployments or offline use, self-host the traineddata files:
+For production deployments, offline usage, or faster loading:
 
-1. **Download traineddata** from the [tessdata repository](https://github.com/naptha/tessdata/tree/gh-pages/4.0.0)
+1. **Download traineddata files**:
+   - Official repository: [tessdata](https://github.com/naptha/tessdata/tree/gh-pages/4.0.0)
+   - Direct download: `https://tessdata.projectnaptha.com/4.0.0/[lang].traineddata.gz`
+   - Example: `https://tessdata.projectnaptha.com/4.0.0/sin.traineddata.gz` for Sinhala
 
-2. **Host files** on your server under `/tessdata/`
+2. **Create a tessdata directory** on your server:
+   ```
+   your-server/
+   └── tessdata/
+       ├── eng.traineddata
+       ├── spa.traineddata
+       ├── sin.traineddata
+       └── ...
+   ```
 
-3. **Update `script.js`**:
+3. **Update `script.js`** (line ~94):
    ```javascript
-   const worker = await Tesseract.createWorker({
-     langPath: 'https://yourdomain.com/tessdata',
-     cachePath: './tessdata' // Optional: local cache path
+   maybeWorker = Tesseract.createWorker({
+     logger: m => { /* ... */ },
+     langPath: 'https://yourdomain.com/tessdata'  // Change this line
    });
+   ```
+
+4. **Configure cache headers** on your server:
+   ```apache
+   # Apache .htaccess
+   <FilesMatch "\.(traineddata)$">
+     Header set Cache-Control "max-age=31536000, public, immutable"
+   </FilesMatch>
+   ```
+
+   ```nginx
+   # Nginx
+   location ~* \.traineddata$ {
+     expires 1y;
+     add_header Cache-Control "public, immutable";
+   }
    ```
 
 ### Improving OCR Accuracy
 
-Preprocess images before OCR for better results:
+The current implementation processes images as-is. For better results, consider preprocessing:
 
-- **Convert to grayscale**: Reduces noise and improves contrast detection
-- **Apply thresholding**: Converts to black and white for clearer text
-- **Scale images**: Larger images (300 DPI+) generally perform better
-- **Denoise**: Remove artifacts and compression noise
-- **Deskew**: Straighten tilted text
+**Image Quality Tips:**
+- Use high-resolution images (300 DPI or higher)
+- Ensure good contrast between text and background
+- Avoid blurry or low-quality photos
+- Straighten skewed or rotated text
 
-Example preprocessing with Canvas API:
+**Optional Preprocessing** (requires code modifications):
+
 ```javascript
-function preprocessImage(canvas) {
-  const ctx = canvas.getContext('2d');
-  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  
-  // Convert to grayscale
-  for (let i = 0; i < imageData.data.length; i += 4) {
-    const avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
-    imageData.data[i] = imageData.data[i + 1] = imageData.data[i + 2] = avg;
-  }
-  
-  ctx.putImageData(imageData, 0, 0);
-  return canvas;
+// Add this function to script.js
+function preprocessImage(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      // Draw original image
+      ctx.drawImage(img, 0, 0);
+      
+      // Convert to grayscale
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      
+      for (let i = 0; i < data.length; i += 4) {
+        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = data[i + 1] = data[i + 2] = avg;
+      }
+      
+      ctx.putImageData(imageData, 0, 0);
+      canvas.toBlob(resolve, 'image/png');
+    };
+    img.src = URL.createObjectURL(file);
+  });
 }
 ```
 
 ### Caching Strategy
 
-Optimize performance with proper caching:
+**Current Implementation:**
+- Tesseract.js automatically caches downloaded traineddata in browser memory
+- `localStorage` is used to persist the last extracted text between sessions
 
-1. **HTTP Cache Headers**: Configure your server to cache traineddata files
-   ```apache
-   # Apache .htaccess
-   <FilesMatch "\.(traineddata)$">
-     Header set Cache-Control "max-age=2592000, public"
-   </FilesMatch>
-   ```
+**Recommendations for Production:**
+1. Implement Service Worker for offline-first experience
+2. Pre-cache commonly used language files
+3. Add cache versioning for traineddata updates
 
-2. **Service Worker**: Implement offline-first caching for app assets and language data
+## 💾 Data Persistence
 
-3. **Pre-download Languages**: Add a feature to download commonly used languages ahead of time
+### Local Storage Feature
+
+The app includes a "Save Locally" button that stores extracted text in browser localStorage:
+
+```javascript
+// Saved automatically when you click "Save Locally"
+localStorage.setItem('ocrai_last_text', result.value);
+
+// Automatically loaded on page refresh
+window.addEventListener('load', () => {
+  const last = localStorage.getItem('ocrai_last_text');
+  if (last) result.value = last;
+});
+```
+
+**Important Notes:**
+- Data persists only in the current browser
+- Storage limit: ~5-10 MB (varies by browser)
+- Clearing browser data will erase saved text
+- Not suitable for sensitive information (unencrypted)
 
 ## 📄 PDF & Multi-Page Support
 
 ### Current Limitations
 
-The client-side implementation focuses on single images. PDFs are not directly supported.
+This client-side implementation focuses on **single image files** (JPG, PNG). PDF support is **not included** in the current version.
 
 ### Workarounds
 
 **Option 1: Manual Conversion**
-- Convert PDF pages to images using tools like Adobe Acrobat, GIMP, or online converters
+- Convert PDF pages to images using:
+  - Adobe Acrobat Reader (Export → Image → PNG)
+  - Online tools (PDF2PNG, ILovePDF)
+  - Command-line tools (ImageMagick, pdftoppm)
 - Upload each page image separately
 
-**Option 2: Server-Side Processing**
+**Option 2: PDF.js Integration** (requires code modification)
 ```javascript
-// Example Node.js backend with pdf-poppler
-const { convert } = require('pdf-poppler');
+// Add PDF.js library
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
-async function convertPdfToImages(pdfPath) {
-  const opts = {
-    format: 'png',
-    out_dir: './temp',
-    out_prefix: 'page',
-    page: null // Convert all pages
-  };
+// Process PDF pages
+async function processPdf(file) {
+  const pdf = await pdfjsLib.getDocument(URL.createObjectURL(file)).promise;
   
-  await convert(pdfPath, opts);
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const viewport = page.getViewport({ scale: 2.0 });
+    
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    canvas.toBlob(blob => {
+      // Process this blob with Tesseract
+    });
+  }
 }
 ```
 
-**Option 3: Browser-Based PDF.js**
-- Use Mozilla's PDF.js to render PDF pages to canvas
-- Extract canvas data and pass to Tesseract
+**Option 3: Server-Side Processing**
+- Build a backend API (Node.js, Python, etc.)
+- Use libraries like `pdf-poppler`, `pdf2image`, or `ghostscript`
+- Return processed images to the client for OCR
 
 ## 🐛 Troubleshooting
 
-### `worker.load is not a function`
+### Common Issues
 
-This is the most common error when using incompatible Tesseract.js versions.
+#### `worker.load is not a function`
 
-**Diagnosis Steps:**
+**This is the most common error** when using incompatible Tesseract.js builds.
 
-1. Open browser DevTools Console (F12)
-
+**Diagnosis:**
+1. Open browser DevTools (F12) → Console tab
 2. Run these commands:
    ```javascript
-   typeof Tesseract                    // Should return: "object"
-   console.dir(Tesseract)              // Inspect available methods
-   typeof Tesseract.createWorker       // Should return: "function"
+   typeof Tesseract                    // Expected: "object"
+   console.dir(Tesseract)              // Should show createWorker and recognize
+   typeof Tesseract.createWorker       // Expected: "function"
    ```
 
 **Solutions:**
 
-✅ **Use the recommended CDN** (already included in this project):
+✅ **Verify you're using the correct CDN** (already included in `index.html`):
 ```html
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
 ```
 
-❌ **Avoid legacy builds** that only expose `Tesseract.recognize()`
+✅ **The app includes fallback logic** that handles:
+- `createWorker` returning a Promise (auto-awaits)
+- `createWorker` unavailable (falls back to `Tesseract.recognize`)
+- Different response formats from various Tesseract builds
 
-🔍 **Check console warnings**: The app logs detailed error messages:
-- `createWorker threw during invocation:`
-- `createWorker did not return a worker with .load(); worker value:`
+✅ **Check console for warnings**:
+- `createWorker threw during invocation:` → Build incompatibility
+- `createWorker did not return a worker with .load()` → Unexpected return value
 
-### Language Data Download Fails
+❌ **Don't mix multiple Tesseract versions** or use custom builds without testing
 
-**Symptoms**: Progress bar stops, error message appears
+---
 
-**Causes & Solutions**:
-- **CORS Issues**: Ensure you're running via HTTP server, not `file://`
-- **Network Blocking**: Check firewall/proxy settings
-- **CDN Unavailable**: Self-host traineddata files (see Advanced Configuration)
+#### Language Download Fails
 
-### Poor OCR Accuracy
+**Symptoms:**
+- Progress bar stops at "loading language"
+- Error message appears
+- Console shows CORS or network errors
 
-**Troubleshooting checklist**:
-- ✅ Is the image high resolution (300+ DPI)?
-- ✅ Is the text clear and in focus?
-- ✅ Did you select the correct language?
-- ✅ Is the text orientation correct (not rotated)?
-- ✅ Try preprocessing (grayscale, threshold)
+**Causes & Solutions:**
 
-### Performance Issues
+| Cause | Solution |
+|-------|----------|
+| Not using HTTP server | Run via `python -m http.server` or similar |
+| Firewall/proxy blocking | Whitelist `tessdata.projectnaptha.com` |
+| CDN unavailable | Self-host traineddata files (see Advanced Configuration) |
+| Browser blocking mixed content | Ensure page is served over HTTPS if using HTTPS traineddata source |
 
-**Optimization tips**:
-- Reduce image size before processing (max 2000px width/height)
-- Use fewer languages simultaneously
-- Close other browser tabs to free memory
-- Use a desktop browser instead of mobile for large images
+---
+
+#### Poor OCR Accuracy
+
+**Troubleshooting Checklist:**
+
+- [ ] Is the image high resolution (300+ DPI)?
+- [ ] Is the text clear and in focus?
+- [ ] Did you select the correct language?
+- [ ] Is the text properly oriented (not rotated/upside down)?
+- [ ] Is there sufficient contrast between text and background?
+- [ ] Is the font standard and readable (not decorative/handwritten)?
+
+**Improvement Tips:**
+- Take photos in good lighting
+- Hold camera steady to avoid blur
+- Capture text straight-on (avoid angles)
+- Use scanner instead of camera when possible
+- Pre-process images (grayscale, increase contrast)
+
+---
+
+#### Performance Issues / Browser Freezing
+
+**Causes:**
+- Large image file size
+- Multiple languages selected
+- Insufficient device memory
+- Too many browser tabs open
+
+**Solutions:**
+1. **Reduce image size** before processing:
+   ```javascript
+   // Add to handleFile() function
+   if (f.size > 5 * 1024 * 1024) { // 5MB
+     alert('Image is very large. Consider resizing for better performance.');
+   }
+   ```
+
+2. **Limit language selection** to 1-2 languages
+3. **Close unnecessary browser tabs**
+4. **Use desktop browser** instead of mobile for large images
+5. **Consider batch processing** for multiple images (process one at a time)
+
+---
+
+#### "Unsupported file type" Error
+
+**Cause:** Attempting to upload non-image files
+
+**Supported Formats:**
+- ✅ JPEG (.jpg, .jpeg)
+- ✅ PNG (.png)
+- ❌ PDF (.pdf) - not supported in current version
+- ❌ TIFF (.tiff) - may work but not officially supported
+- ❌ WebP (.webp) - browser-dependent
+
+**Solution:** Convert files to JPG or PNG before uploading
 
 ## 🔒 Security & Privacy
 
-### Data Privacy
+### Privacy Guarantees
 
-- **100% Client-Side**: Images never leave your browser
-- **No Tracking**: No analytics or user data collection
-- **No External Uploads**: All processing happens locally
+✅ **100% Client-Side Processing**
+- Images are processed entirely in your browser
+- No data is uploaded to external servers
+- No tracking or analytics
+- No cookies or persistent identifiers
 
-### Best Practices
+✅ **Third-Party Resources**
+- Tesseract.js library: jsDelivr CDN (open source, verified)
+- Language traineddata: tessdata.projectnaptha.com (official Tesseract data)
+- Tailwind CSS: Tailwind CDN (styling framework)
 
-- **Self-host in production**: Avoid CDN dependencies for sensitive deployments
-- **Use HTTPS**: Serve over encrypted connections to prevent MITM attacks
-- **Content Security Policy**: Implement CSP headers to restrict resource loading
+### Best Practices for Production
 
-```html
-<meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net;">
-```
+**For Public Deployment:**
+1. **Self-host all resources** (Tesseract.js, traineddata, Tailwind)
+2. **Implement Content Security Policy**:
+   ```html
+   <meta http-equiv="Content-Security-Policy" 
+         content="default-src 'self'; 
+                  script-src 'self' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; 
+                  style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;
+                  img-src 'self' blob: data:;">
+   ```
+
+3. **Use HTTPS** exclusively
+4. **Add Subresource Integrity (SRI)** hashes:
+   ```html
+   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"
+           integrity="sha384-..."
+           crossorigin="anonymous"></script>
+   ```
+
+**For Sensitive Documents:**
+- Deploy on internal network or localhost
+- Self-host all dependencies (no external CDNs)
+- Consider adding encryption for localStorage
 
 ## 🛠️ Browser Compatibility
 
-| Browser | Version | Status |
-|---------|---------|--------|
-| Chrome/Edge | 90+ | ✅ Fully Supported |
-| Firefox | 88+ | ✅ Fully Supported |
-| Safari | 14+ | ✅ Supported |
-| Mobile Chrome | Latest | ⚠️ Limited Performance |
-| Mobile Safari | Latest | ⚠️ Limited Performance |
+| Browser | Desktop | Mobile | Notes |
+|---------|---------|--------|-------|
+| **Chrome** | ✅ 90+ | ⚠️ Limited | Recommended for best performance |
+| **Edge** | ✅ 90+ | ⚠️ Limited | Chromium-based, full support |
+| **Firefox** | ✅ 88+ | ⚠️ Limited | Excellent compatibility |
+| **Safari** | ✅ 14+ | ⚠️ Limited | May have slower processing |
+| **Opera** | ✅ 76+ | ⚠️ Limited | Chromium-based |
 
-> **Note**: Mobile browsers work but may be slower due to CPU constraints. Desktop browsers recommended for large images.
+**Mobile Considerations:**
+- Processing is significantly slower on mobile devices
+- Large images may cause memory issues
+- Recommended to use desktop browsers for:
+  - Images larger than 2 MB
+  - Multiple language processing
+  - Batch operations
+
+**Required Browser Features:**
+- JavaScript ES6+ (async/await, Promises, arrow functions)
+- Web Workers (for Tesseract.js background processing)
+- Blob API and URL.createObjectURL
+- FileReader API
+- Clipboard API (for copy function)
+- localStorage API (for save function)
 
 ## 🚀 Deployment
 
 ### Static Hosting (Recommended)
 
-Deploy to any static hosting provider:
+This app is pure HTML/CSS/JavaScript with no build process required.
+
+**Netlify:**
+1. Drag and drop the project folder into Netlify
+2. Or use CLI:
+   ```bash
+   npm install -g netlify-cli
+   netlify deploy --prod --dir=.
+   ```
 
 **Vercel:**
 ```bash
-npm i -g vercel
-vercel
-```
-
-**Netlify:**
-```bash
-npm i -g netlify-cli
-netlify deploy
+npm install -g vercel
+vercel --prod
 ```
 
 **GitHub Pages:**
-1. Push to GitHub repository
-2. Enable Pages in repository settings
+1. Push code to GitHub repository
+2. Go to Settings → Pages
 3. Select branch and root directory
+4. Access at `https://username.github.io/repo-name`
 
-### Docker
+**Firebase Hosting:**
+```bash
+npm install -g firebase-tools
+firebase init hosting
+firebase deploy
+```
 
+### Docker Deployment
+
+**Dockerfile:**
 ```dockerfile
 FROM nginx:alpine
 COPY . /usr/share/nginx/html
@@ -298,49 +532,159 @@ EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 ```
 
-Build and run:
+**Build and run:**
 ```bash
 docker build -t ocr-app .
-docker run -p 8080:80 ocr-app
+docker run -d -p 8080:80 ocr-app
+```
+
+**Docker Compose:**
+```yaml
+version: '3.8'
+services:
+  ocr-app:
+    build: .
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+```
+
+### Server Configuration
+
+**Apache (.htaccess):**
+```apache
+# Enable gzip compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/javascript
+</IfModule>
+
+# Cache static assets
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/html "access plus 1 hour"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+</IfModule>
+```
+
+**Nginx:**
+```nginx
+server {
+    listen 80;
+    server_name ocr.example.com;
+    root /var/www/ocr-app;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Cache static files
+    location ~* \.(css|js)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/javascript;
+}
 ```
 
 ## 🤝 Contributing
 
-Contributions are welcome! Here are some ideas:
+Contributions are welcome! Here are some ideas for improvements:
 
-- 🎨 UI/UX improvements
-- 🌍 Additional language support
-- 📱 Better mobile experience
-- 🔧 Image preprocessing filters
-- 📊 Batch processing support
-- 🔌 Browser extension version
+### Feature Ideas
+- [ ] **Batch Processing**: Upload and process multiple images
+- [ ] **Image Preprocessing UI**: Add brightness/contrast/rotation controls
+- [ ] **Text Post-Processing**: Spell check, formatting options
+- [ ] **History Feature**: Keep track of previous OCR results
+- [ ] **PDF Support**: Client-side PDF page extraction
+- [ ] **Export Formats**: Add Word, CSV, JSON export options
+- [ ] **Language Auto-Detection**: Automatically detect document language
+- [ ] **Keyboard Shortcuts**: Add hotkeys for common actions
+- [ ] **Progress Resume**: Save and resume interrupted OCR jobs
+- [ ] **Dark Mode**: Add dark theme support
+
+### Code Quality
+- Add TypeScript definitions
+- Implement unit tests (Jest/Vitest)
+- Add E2E tests (Playwright/Cypress)
+- Improve error handling and user feedback
+- Add accessibility improvements (ARIA labels, keyboard navigation)
+
+### How to Contribute
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📝 License
 
-MIT License - feel free to use this project for personal or commercial purposes.
+**MIT License**
+
+Copyright (c) 2025 OCR.ai
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ## 🙏 Acknowledgments
 
-- [Tesseract.js](https://tesseract.projectnaptha.com/) - OCR engine
-- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract) - Original C++ library
-- [Tailwind CSS](https://tailwindcss.com/) - Styling framework
+- **[Tesseract.js](https://tesseract.projectnaptha.com/)** - JavaScript OCR engine by Kevin Kwok
+- **[Tesseract OCR](https://github.com/tesseract-ocr/tesseract)** - Original C++ OCR library by Google
+- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
+- **[tessdata](https://github.com/naptha/tessdata)** - Trained language data files
 
-## 📧 Support
+## 📞 Support
 
-**Debugging Information to Provide:**
+### Getting Help
 
-If you encounter issues, please provide:
+**For Bugs or Issues:**
+1. Check this README's Troubleshooting section
+2. Search existing issues on GitHub
+3. Open a new issue with:
+   - Browser name and version
+   - Console error messages
+   - Steps to reproduce
+   - Screenshots (if applicable)
 
-1. Browser name and version
-2. Console error messages
-3. Output of these commands:
-   ```javascript
-   typeof Tesseract
-   console.dir(Tesseract)
-   typeof Tesseract.createWorker
-   ```
-4. Screenshot of the error (if applicable)
+**Debugging Information to Include:**
+
+When reporting issues, please provide:
+
+```javascript
+// Run in browser console and include output
+console.log('Browser:', navigator.userAgent);
+console.log('Tesseract type:', typeof Tesseract);
+console.log('Tesseract object:', Tesseract);
+console.log('createWorker type:', typeof Tesseract.createWorker);
+```
+
+Also include:
+- Any console warnings/errors
+- Screenshot of the error
+- The file type and size you tried to process
+- Languages selected
+
+### Useful Resources
+
+- [Tesseract.js Documentation](https://tesseract.projectnaptha.com/)
+- [Tesseract OCR Wiki](https://github.com/tesseract-ocr/tesseract/wiki)
+- [Improving OCR Quality](https://tesseract-ocr.github.io/tessdoc/ImproveQuality.html)
+- [Supported Languages](https://tesseract-ocr.github.io/tessdoc/Data-Files-in-different-versions.html)
 
 ---
 
+<div align="center">
+
 **Made with ❤️ for text extraction enthusiasts**
+**Developed By UI ❤️ Owner of UI DESIGNERS AND DEVELOPERS**
+
+⭐ Star this project if you find it useful!
+
+</div>
