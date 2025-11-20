@@ -5,6 +5,8 @@ A powerful, privacy-focused client-side Optical Character Recognition (OCR) web 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Tesseract.js](https://img.shields.io/badge/Tesseract.js-v4.1.1-green.svg)](https://tesseract.projectnaptha.com/)
 
+Test Host (DEMO) :- https://ocr-ai-swart.vercel.app/
+
 ## 📱 ScreenShots
 <img width="1904" height="956" alt="Screenshot 2025-11-14 024648" src="https://github.com/user-attachments/assets/4014b26f-8c1d-4a72-854a-2f8ce8421dc6" />
 
